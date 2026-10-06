@@ -8,3 +8,4 @@ instance/*
 .idea/
 .vscode/
 *.sqlite3
+.pytest_cache/
