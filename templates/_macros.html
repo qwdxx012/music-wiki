@@ -1,0 +1,156 @@
+{# Иконка из набора Silk (16x16 PNG, static/img/silk/). size=32 - та же
+   иконка, увеличенная вдвое с чёткими пикселями (класс silk-2x) #}
+{% macro silk(name, size=16, alt="") -%}
+<img class="silk{% if size > 16 %} silk-2x{% endif %}" src="{{ url_for('static', filename='img/silk/' ~ name ~ '.png') }}" width="{{ size }}" height="{{ size }}" alt="{{ alt }}">
+{%- endmacro %}
+
+{# Кнопки заголовка окна. "Закрыть" работает без JS: это GET-форма на close_url #}
+{% macro window_controls(close_url=None) -%}
+<div class="title-bar-controls">
+  <button type="button" aria-label="Minimize" tabindex="-1"></button>
+  <button type="button" aria-label="Maximize" tabindex="-1"></button>
+  {%- if close_url %}
+  <form action="{{ close_url }}" method="get"><button aria-label="Close" title="Закрыть"></button></form>
+  {%- else %}
+  <button type="button" aria-label="Close" tabindex="-1"></button>
+  {%- endif %}
+</div>
+{%- endmacro %}
+
+{% macro title_bar(text, close_url=None) -%}
+<div class="title-bar">
+  <div class="title-bar-text">{{ text }}</div>
+  {{ window_controls(close_url) }}
+</div>
+{%- endmacro %}
+
+{% macro artist_links(credits) -%}
+{%- for c in credits -%}
+<a href="{{ c.href or url_for('main.artist', mbid=c.id) }}">{{ c.name }}</a>{{ c.join }}
+{%- else -%}
+<span class="muted">неизвестен</span>
+{%- endfor -%}
+{%- endmacro %}
+
+{% macro people(list, empty="Нет данных в MusicBrainz") -%}
+{%- if list -%}
+<ul class="credit-list">
+  {%- for p in list %}
+  <li><a href="{{ url_for('main.artist', mbid=p.id) }}">{{ p.name }}</a>
+    <span class="muted">{{ p.role }}{% if p.dates %}, {{ p.dates }}{% endif %}</span></li>
+  {%- endfor %}
+</ul>
+{%- else -%}
+<p class="muted">{{ empty }}</p>
+{%- endif -%}
+{%- endmacro %}
+
+{# Сегментированный прогресс-бар как в установщиках #}
+{% macro progress(percent) -%}
+<div class="seg-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ percent }}">
+  <div class="seg-progress-bar" style="width: {{ [[percent, 0]|max, 100]|min }}%"></div>
+</div>
+{%- endmacro %}
+
+{# Обложка: Last.fm, иначе Cover Art Archive через <object>.
+   Если у Cover Art Archive обложки нет (404), браузер сам покажет то, что
+   лежит внутри <object>: заглушку с иконкой диска. JS для этого не нужен #}
+{% macro cover(lastfm_url, caa_url, alt) -%}
+<div class="cover-box">
+  {%- if lastfm_url %}
+  <img class="cover" src="{{ lastfm_url }}" alt="{{ alt }}">
+  {%- elif caa_url %}
+  <object class="cover" data="{{ caa_url }}" type="image/jpeg" aria-label="{{ alt }}">
+    <span class="cover placeholder" role="img" aria-label="Нет обложки">{{ silk('cd', 64) }}</span>
+  </object>
+  {%- else %}
+  <span class="cover placeholder" role="img" aria-label="Нет обложки">{{ silk('cd', 64) }}</span>
+  {%- endif %}
+</div>
+{%- endmacro %}
+
+{# Форма распознавания: используется на главной и на /recognize.
+   Без JS работает как обычная POST-форма. С JS появляется кнопка "Записать" (recorder.js). #}
+{% macro recognize_form(max_mb, enabled=True, seconds=8) -%}
+<form id="recognize-form" class="recognize-form" action="{{ url_for('recognize.recognize') }}" method="post"
+      enctype="multipart/form-data" data-busy="recognize-busy" data-rec-seconds="{{ seconds }}">
+  {%- if not enabled %}
+  <p class="notice">Распознавание выключено: не задан AUDD_API_TOKEN.</p>
+  {%- endif %}
+  <div class="field-row-stacked">
+    <label for="audio-file">Аудиофайл (до {{ max_mb }} МБ, лучше 10-20 секунд):</label>
+    <div class="upload-row">
+      <input id="audio-file" type="file" name="audio" accept="audio/*,video/mp4,video/webm,.m4a,.3gp,.amr">
+      <button type="button" id="rec-btn" class="icon-btn" hidden>
+        {{ silk('sound') }}Записать
+      </button>
+    </div>
+  </div>
+  <div class="field-row-stacked mobile-only">
+    <label for="audio-rec">...или запишите звук диктофоном телефона:</label>
+    <input id="audio-rec" type="file" name="audio" accept="audio/*" capture>
+  </div>
+
+  <div id="rec-status" class="rec-status" hidden aria-live="polite">
+    <p><span class="rec-dot" aria-hidden="true"></span><b>Идёт запись.</b>
+      Поднесите устройство к источнику звука. Осталось <b id="rec-left">{{ seconds }}</b> с</p>
+    <div class="seg-progress"><div id="rec-bar" class="seg-progress-bar" style="width: 0"></div></div>
+    <div class="dialog-buttons"><button type="button" id="rec-stop">Стоп</button></div>
+  </div>
+
+  <div class="dialog-buttons">
+    <button type="submit" class="default">Распознать</button>
+  </div>
+  <div id="recognize-busy" class="busy" hidden>
+    <p>Идёт распознавание. Подождите...</p>
+    <div class="seg-progress marquee"><div class="seg-progress-bar"></div></div>
+  </div>
+</form>
+
+{# Системный диалог для ошибок записи (заполняется из recorder.js) #}
+{# data-icon-*: пути к иконкам, чтобы recorder.js не собирал URL вручную #}
+<div id="sys-dialog" class="sys-dialog" hidden
+     data-icon-error="{{ url_for('static', filename='img/silk/exclamation.png') }}"
+     data-icon-warning="{{ url_for('static', filename='img/silk/error.png') }}"
+     data-icon-info="{{ url_for('static', filename='img/silk/information.png') }}">
+  <section class="window error-dialog" role="alertdialog" aria-modal="true" aria-labelledby="sys-dialog-title">
+    <div class="title-bar">
+      <div class="title-bar-text" id="sys-dialog-title">Ошибка</div>
+      <div class="title-bar-controls"><button type="button" aria-label="Close" data-close></button></div>
+    </div>
+    <div class="window-body">
+      <div class="error-body">
+        <img id="sys-dialog-icon" class="silk silk-2x error-icon" src="{{ url_for('static', filename='img/silk/exclamation.png') }}" width="32" height="32" alt="">
+        <div>
+          <p id="sys-dialog-message"></p>
+          <p id="sys-dialog-details" class="muted"></p>
+        </div>
+      </div>
+      <div class="dialog-buttons centered"><button type="button" class="default" data-close>OK</button></div>
+    </div>
+  </section>
+</div>
+{%- endmacro %}
+
+{# Окно-сообщение: kind = error | warning | info.
+   В Silk "error" - это жёлтый треугольник, поэтому для ошибки берём
+   красный "exclamation", а для предупреждения - "error" #}
+{% macro message_box(title, message, details=None, kind="error", ok_url="/", extra=None) -%}
+{%- set icons = {"error": "exclamation", "warning": "error", "info": "information"} %}
+<section class="window error-dialog" role="alertdialog" aria-labelledby="msg-text">
+  {{ title_bar(title, ok_url) }}
+  <div class="window-body">
+    <div class="error-body">
+      <span class="error-icon">{{ silk(icons.get(kind, "exclamation"), 32) }}</span>
+      <div>
+        <p id="msg-text">{{ message }}</p>
+        {% if details %}<p class="muted">{{ details }}</p>{% endif %}
+      </div>
+    </div>
+    <div class="dialog-buttons centered">
+      <a class="btn default" href="{{ ok_url }}">OK</a>
+      {% if extra %}<a class="btn" href="{{ extra.url }}">{{ extra.label }}</a>{% endif %}
+    </div>
+  </div>
+</section>
+{%- endmacro %}

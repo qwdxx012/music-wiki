@@ -1,0 +1,140 @@
+{% extends "layout.html" %}
+{% from "_macros.html" import title_bar, progress, silk %}
+{% block title %}{{ artist.name }}{% endblock %}
+{% block content %}
+<section class="window">
+  {{ title_bar("Исполнитель: " ~ artist.name, url_for('main.index')) }}
+  <div class="window-body">
+    <div class="artist-head">
+      <div class="cover-box">
+        {% if info and info.image %}
+        <img class="avatar" src="{{ info.image }}" alt="{{ artist.name }}">
+        {% else %}
+        <span class="avatar placeholder" role="img" aria-label="Нет фото">{{ silk('user', 64) }}</span>
+        {% endif %}
+      </div>
+      <div class="props-main">
+        <h1 class="props-title">{{ artist.name }}</h1>
+        {% if artist.disambiguation %}<p class="muted">({{ artist.disambiguation }})</p>{% endif %}
+        <hr class="etched">
+        <table class="props-table">
+          {% if artist.type %}<tr><th>Тип:</th><td>{{ artist.type }}</td></tr>{% endif %}
+          {% if artist.country or artist.begin_area %}
+          <tr><th>Откуда:</th><td>{{ artist.begin_area }}{% if artist.begin_area and artist.country %}, {% endif %}{{ artist.country }}</td></tr>
+          {% endif %}
+          {% if artist.years %}<tr><th>Годы:</th><td>{{ artist.years }}</td></tr>{% endif %}
+          {% set genres = artist.genres or (info.tags if info else []) %}
+          {% if genres %}<tr><th>Жанры:</th><td>{{ genres|join(', ') }}</td></tr>{% endif %}
+          {% if info and info.listeners %}
+          <tr><th>Слушателей:</th><td>{{ info.listeners|num }} <span class="muted">(Last.fm)</span></td></tr>
+          {% endif %}
+        </table>
+      </div>
+    </div>
+
+    <fieldset>
+      <legend>Биография</legend>
+      {% if info and info.summary %}
+        {% for p in info.summary %}<p>{{ p }}</p>{% endfor %}
+        {% if info.content %}
+        <details>
+          <summary>Читать полностью</summary>
+          {% for p in info.content %}<p>{{ p }}</p>{% endfor %}
+        </details>
+        {% endif %}
+        {% if info.url %}<p class="muted">Источник: <a href="{{ info.url }}" target="_blank" rel="noopener">Last.fm</a></p>{% endif %}
+      {% else %}
+        {% if failed.info %}
+        <p class="notice">Информация временно недоступна: Last.fm не ответил. Обновите страницу чуть позже.</p>
+        {% else %}
+        <p class="muted">Биография недоступна{% if not lastfm_enabled %}: не задан LASTFM_API_KEY{% endif %}.</p>
+        {% endif %}
+      {% endif %}
+    </fieldset>
+
+    {% if artist.members %}
+    <fieldset>
+      <legend>Участники</legend>
+      <ul class="credit-list">
+        {% for m in artist.members %}
+        <li class="{{ 'muted-row' if m.ended }}"><a href="{{ url_for('main.artist', mbid=m.id) }}">{{ m.name }}</a>
+          <span class="muted">{{ m.role }}{% if m.dates %} ({{ m.dates }}){% endif %}</span></li>
+        {% endfor %}
+      </ul>
+    </fieldset>
+    {% endif %}
+    {% if artist.member_of %}
+    <fieldset>
+      <legend>Участник групп</legend>
+      {% for m in artist.member_of %}<a href="{{ url_for('main.artist', mbid=m.id) }}">{{ m.name }}</a>{% if not loop.last %}, {% endif %}{% endfor %}
+    </fieldset>
+    {% endif %}
+  </div>
+</section>
+
+<div class="grid-2">
+  <section class="window">
+    {{ title_bar("Дискография") }}
+    <div class="window-body">
+      {% if failed.disco %}
+      <p class="notice">Дискография временно недоступна: MusicBrainz не ответил.</p>
+      {% elif disco.albums %}
+      <div class="sunken-panel table-wrap">
+        <table class="interactive explorer">
+          <thead><tr><th>Год</th><th>Название</th><th>Тип</th></tr></thead>
+          <tbody>
+            {% for a in disco.albums %}
+            <tr>
+              <td>{{ a.year or '-' }}</td>
+              <td><a class="icon-album" href="{{ url_for('main.search', q='rgid:' ~ a.id, type='track') }}">{{ a.title }}</a></td>
+              <td>{{ a.type }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="muted">Студийных альбомов не найдено.</p>
+      {% endif %}
+      {% if disco and disco.other_releases %}
+      <details class="more">
+        <summary>Сборники, концертники и прочее ({{ disco.other_releases|length }})</summary>
+        <ul class="credit-list">
+          {% for a in disco.other_releases %}
+          <li>{{ a.year or '----' }} <a href="{{ url_for('main.search', q='rgid:' ~ a.id, type='track') }}">{{ a.title }}</a>
+            <span class="muted">{{ a.type }}</span></li>
+          {% endfor %}
+        </ul>
+      </details>
+      {% endif %}
+    </div>
+    <div class="status-bar">
+      <p class="status-bar-field">Альбомов и EP: {{ disco.count if disco else '?' }}</p>
+      <p class="status-bar-field">{{ 'Из кэша (24 ч)' if from_cache else 'Свежие данные' }}</p>
+    </div>
+  </section>
+
+  <section class="window">
+    {{ title_bar("Рекомендуем послушать ещё") }}
+    <div class="window-body">
+      {% if similar %}
+      <div class="similar-grid">
+        {% for s in similar %}
+        <a class="similar-card" href="{{ url_for('main.artist_lookup', name=s.name, mbid=s.mbid or '') }}">
+          <span class="similar-name">{{ s.name }}</span>
+          {{ progress(s.match) }}
+          <span class="muted">совпадение {{ s.match }}%</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      {% if failed.similar %}
+      <p class="notice">Информация временно недоступна: Last.fm не ответил.</p>
+      {% else %}
+      <p class="muted">Похожих исполнителей нет{% if not lastfm_enabled %}: не задан LASTFM_API_KEY{% endif %}.</p>
+      {% endif %}
+      {% endif %}
+    </div>
+  </section>
+</div>
+{% endblock %}

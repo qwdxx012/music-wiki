@@ -1,0 +1,10 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+instance/*
+!instance/.gitkeep
+.idea/
+.vscode/
+*.sqlite3

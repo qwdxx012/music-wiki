@@ -1,0 +1,147 @@
+{% extends "layout.html" %}
+{% from "_macros.html" import title_bar, artist_links, people, cover %}
+{% block title %}{{ rec.title }}{% endblock %}
+{% block content %}
+{% set c = rec.credits %}
+{% set first_artist = rec.artists[0] if rec.artists else None %}
+<section class="window">
+  {{ title_bar("Свойства: " ~ rec.title, url_for('main.index')) }}
+  <div class="window-body">
+    <menu role="tablist">
+      {% for key, label in tabs.items() %}
+      <li role="tab" {% if key == tab %}aria-selected="true"{% endif %}>
+        <a href="{{ url_for('main.track', mbid=rec.id, tab=key) }}">{{ label }}</a>
+      </li>
+      {% endfor %}
+    </menu>
+    <div class="window" role="tabpanel">
+      <div class="window-body">
+
+      {% if tab == 'general' %}
+        <div class="props-general">
+          {{ cover(lfm.image if lfm else None, rec.cover_url, rec.title) }}
+          <div class="props-main">
+            <h1 class="props-title">{{ rec.title }}</h1>
+            {% if rec.disambiguation %}<p class="muted">({{ rec.disambiguation }})</p>{% endif %}
+            <hr class="etched">
+            <table class="props-table">
+              <tr><th>Исполнитель:</th><td>{{ artist_links(rec.artists) }}</td></tr>
+              <tr><th>Год:</th><td>{{ rec.year or 'неизвестен' }}</td></tr>
+              <tr><th>Альбом:</th><td>
+                {% if rec.release %}
+                  {{ rec.release.title }}
+                  {% if rec.release.rg_type %}<span class="muted">({{ rec.release.rg_type }})</span>{% endif %}
+                {% elif lfm and lfm.album %}{{ lfm.album }}{% else %}-{% endif %}
+              </td></tr>
+              <tr><th>Длительность:</th><td>{{ rec.length or '-' }}</td></tr>
+              {% if rec.genres or (lfm and lfm.tags) %}
+              <tr><th>Жанры:</th><td>{{ (rec.genres or lfm.tags)|join(', ') }}</td></tr>
+              {% endif %}
+              <tr><th>Релизов:</th><td>{{ rec.release_count }}</td></tr>
+              {% if lfm and lfm.listeners %}
+              <tr><th>Слушателей:</th><td>{{ lfm.listeners|num }} <span class="muted">(Last.fm)</span></td></tr>
+              {% endif %}
+            </table>
+          </div>
+        </div>
+        <fieldset>
+          <legend>Описание</legend>
+          {% if lfm and lfm.summary %}
+            {% for p in lfm.summary %}<p>{{ p }}</p>{% endfor %}
+          {% elif lfm_failed %}
+            <p class="notice">Описание временно недоступно: Last.fm не ответил.</p>
+          {% else %}
+            <p class="muted">Описание отсутствует.</p>
+          {% endif %}
+        </fieldset>
+
+      {% elif tab == 'studio' %}
+        {% if c.from_release and rec.release %}
+        <p class="notice">Часть данных взята из кредитов релиза «{{ rec.release.title }}».</p>
+        {% endif %}
+        {% if c.release_failed %}
+        <p class="notice">Кредиты релиза временно недоступны: показаны только данные самой записи.</p>
+        {% endif %}
+        <fieldset>
+          <legend>Студия</legend>
+          {% if c.studios %}
+          <ul class="credit-list">
+            {% for s in c.studios %}
+            <li><b>{{ s.name }}</b>{% if s.area %}, {{ s.area }}{% endif %}
+              <span class="muted">{{ s.role }}{% if s.dates %}, {{ s.dates }}{% endif %}</span></li>
+            {% endfor %}
+          </ul>
+          {% else %}<p class="muted">Нет данных в MusicBrainz</p>{% endif %}
+        </fieldset>
+        <fieldset>
+          <legend>Дата записи</legend>
+          <p>{{ c.recording_dates|join('; ') if c.recording_dates else 'неизвестна' }}
+            {% if rec.first_release_date %}<span class="muted">(первый релиз: {{ rec.first_release_date }})</span>{% endif %}</p>
+        </fieldset>
+        <fieldset>
+          <legend>Продюсеры</legend>
+          {{ people(c.producers) }}
+        </fieldset>
+        <fieldset>
+          <legend>Звукорежиссёры и инженеры</legend>
+          {{ people(c.engineers) }}
+        </fieldset>
+        {% if c.writers %}
+        <fieldset>
+          <legend>Авторы</legend>
+          {{ people(c.writers) }}
+        </fieldset>
+        {% endif %}
+        {% if c.labels %}
+        <fieldset>
+          <legend>Лейбл</legend>
+          <ul class="credit-list">
+            {% for l in c.labels %}<li>{{ l.name }}{% if l.catalog %} <span class="muted">кат. № {{ l.catalog }}</span>{% endif %}</li>{% endfor %}
+          </ul>
+        </fieldset>
+        {% endif %}
+
+      {% elif tab == 'lineup' %}
+        {% if c.from_release and rec.release %}
+        <p class="notice">Часть данных взята из кредитов релиза «{{ rec.release.title }}».</p>
+        {% endif %}
+        {% if c.lineup %}
+        <div class="sunken-panel table-wrap">
+          <table class="interactive explorer">
+            <thead><tr><th>Участник</th><th>Роль</th><th>Период</th></tr></thead>
+            <tbody>
+              {% for p in c.lineup %}
+              <tr>
+                <td><a class="icon-artist" href="{{ url_for('main.artist', mbid=p.id) }}">{{ p.name }}</a></td>
+                <td>{{ p.role }}</td>
+                <td>{{ p.dates }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="muted">Состав для этой записи в MusicBrainz не указан.</p>
+        {% endif %}
+        {% if c.other %}
+        <fieldset>
+          <legend>Прочие участники</legend>
+          {{ people(c.other) }}
+        </fieldset>
+        {% endif %}
+      {% endif %}
+
+      </div>
+    </div>
+
+    <div class="dialog-buttons">
+      {% if first_artist %}
+      <a class="btn default" href="{{ url_for('main.artist', mbid=first_artist.id) }}">К исполнителю</a>
+      {% endif %}
+      <a class="btn" href="{{ url_for('main.search', q=rec.title) }}">Похожие названия</a>
+      <a class="btn" href="https://musicbrainz.org/recording/{{ rec.id }}" target="_blank" rel="noopener">MusicBrainz</a>
+      {% if lfm and lfm.url %}<a class="btn" href="{{ lfm.url }}" target="_blank" rel="noopener">Last.fm</a>{% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

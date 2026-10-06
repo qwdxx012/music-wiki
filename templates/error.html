@@ -1,0 +1,7 @@
+{% extends "layout.html" %}
+{% from "_macros.html" import message_box %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+{{ message_box(title, message, details, kind|default("error"), ok_url=url_for('main.index'),
+               extra={'url': retry_url, 'label': 'Повтор'} if retry_url else None) }}
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "layout.html" %}
+{% from "_macros.html" import title_bar, artist_links %}
+{% block title %}Поиск: {{ heading }}{% endblock %}
+{% block content %}
+{% set g = genre_key or None %}
+<section class="window">
+  {{ title_bar("Результаты поиска: " ~ heading, url_for('main.index')) }}
+  <div class="window-body">
+
+    {# Фильтр по жанру/эпохе. Своего текстового поля здесь нет намеренно:
+       текст запроса вводится в адресной строке в шапке, а сюда он приходит
+       скрытым полем, чтобы смена жанра не сбрасывала запрос #}
+    <form class="toolbar" action="{{ url_for('main.search') }}" method="get">
+      <input type="hidden" name="q" value="{{ q }}">
+      <input type="hidden" name="type" value="{{ kind }}">
+      <label for="genre">Жанр / эпоха:</label>
+      <select id="genre" name="genre">
+        <option value="">(все)</option>
+        {% for key, item in genres.items() %}
+        <option value="{{ key }}" {% if key == genre_key %}selected{% endif %}>{{ item.label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Применить</button>
+      {% if genre and q %}
+      <a class="btn" href="{{ url_for('main.search', q=q, type=kind) }}">Сбросить фильтр</a>
+      {% endif %}
+    </form>
+
+    <menu role="tablist">
+      {% for key, label in kinds.items() %}
+      <li role="tab" {% if key == kind %}aria-selected="true"{% endif %}>
+        <a href="{{ url_for('main.search', q=q or None, type=key, genre=g) }}">{{ label }}</a>
+      </li>
+      {% endfor %}
+    </menu>
+    <div class="window" role="tabpanel">
+      <div class="window-body">
+        {% if error %}<p class="notice">{{ error }}</p>{% endif %}
+        {% if notice %}<p class="notice">{{ notice }}</p>{% endif %}
+
+        {% if results %}
+        <div class="sunken-panel table-wrap">
+          <table class="interactive explorer">
+          {% if lfm_mode and kind == 'track' %}
+            <thead><tr><th>#</th><th>Название</th><th>Исполнитель</th><th>Время</th></tr></thead>
+            <tbody>
+              {% for r in results %}
+              <tr>
+                <td>{{ r.rank or loop.index }}</td>
+                <td><a class="icon-track" href="{{ r.href }}">{{ r.title }}</a></td>
+                <td>{{ artist_links(r.artists) }}</td>
+                <td>{{ r.length }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          {% elif lfm_mode %}
+            <thead><tr><th>#</th><th>Исполнитель</th></tr></thead>
+            <tbody>
+              {% for a in results %}
+              <tr>
+                <td>{{ a.rank or loop.index }}</td>
+                <td><a class="icon-artist" href="{{ a.href }}">{{ a.name }}</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          {% elif kind == 'track' %}
+            <thead>
+              <tr><th>Название</th><th>Исполнитель</th><th>Год</th><th>Альбом</th><th>Время</th></tr>
+            </thead>
+            <tbody>
+              {% for r in results %}
+              <tr>
+                <td><a class="icon-track" href="{{ url_for('main.track', mbid=r.id) }}">{{ r.title }}</a></td>
+                <td>{{ artist_links(r.artists) }}</td>
+                <td>{{ r.year or '-' }}</td>
+                <td>
+                  {% if r.album and r.album.rg_id %}
+                  <a class="icon-album" href="{{ url_for('main.search', q='rgid:' ~ r.album.rg_id, type='track') }}">{{ r.album.title }}</a>
+                  {% elif r.album %}{{ r.album.title }}{% else %}-{% endif %}
+                </td>
+                <td>{{ r.length or '' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          {% else %}
+            <thead>
+              <tr><th>Имя</th><th>Тип</th><th>Страна</th><th>Годы</th><th>Уточнение</th></tr>
+            </thead>
+            <tbody>
+              {% for a in results %}
+              <tr>
+                <td><a class="icon-artist" href="{{ url_for('main.artist', mbid=a.id) }}">{{ a.name }}</a></td>
+                <td>{{ a.type }}</td>
+                <td>{{ a.country }}</td>
+                <td>{{ a.years }}</td>
+                <td class="muted">{{ a.disambiguation }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          {% endif %}
+          </table>
+        </div>
+        {% elif not error %}
+        <p>Поиск завершён. Объекты, соответствующие запросу «{{ heading }}», не найдены.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="status-bar">
+    <p class="status-bar-field">Объектов: {{ results|length }}</p>
+    <p class="status-bar-field">Источник: {{ source }}</p>
+  </div>
+</section>
+{% endblock %}

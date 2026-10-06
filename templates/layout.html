@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Главная{% endblock %} | Music Wiki</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/silk/music.png') }}" type="image/png">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/xp.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
+</head>
+<body>
+{% from "_macros.html" import title_bar, silk %}
+{% set endpoint = request.endpoint or '' %}
+<div class="page">
+  <header class="window">
+    {{ title_bar("Music Wiki") }}
+    <div class="window-body">
+      <nav class="menubar" aria-label="Главное меню">
+        <a href="{{ url_for('main.index') }}" {% if endpoint == 'main.index' %}class="active"{% endif %}><u>Г</u>лавная</a>
+        <a href="{{ url_for('main.search', q='Bohemian Rhapsody', type='track') }}" {% if endpoint == 'main.search' %}class="active"{% endif %}><u>П</u>оиск</a>
+        <a href="{{ url_for('recognize.recognize') }}" {% if endpoint.startswith('recognize.') %}class="active"{% endif %}><u>Ч</u>то играет?</a>
+        <a href="{{ url_for('main.about') }}" {% if endpoint == 'main.about' %}class="active"{% endif %}><u>О</u> проекте</a>
+      </nav>
+      {# Единственное текстовое поле поиска на странице /search: сама страница
+         результатов своего поля не имеет, только фильтр по жанру #}
+      <form class="addressbar" action="{{ url_for('main.search') }}" method="get" role="search">
+        <label for="addr">Адрес</label>
+        <input id="addr" name="q" type="text" value="{{ q|default('') }}" placeholder="Песня или исполнитель">
+        <select name="type" aria-label="Где искать">
+          <option value="track" {% if kind|default('track') == 'track' %}selected{% endif %}>Треки</option>
+          <option value="artist" {% if kind|default('') == 'artist' %}selected{% endif %}>Исполнители</option>
+        </select>
+        <button type="submit">Переход</button>
+      </form>
+    </div>
+  </header>
+
+  <main>
+    {% for msg in get_flashed_messages() %}
+    <p class="infobar" role="status">{{ silk('information') }}{{ msg }}</p>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="status-bar site-footer">
+    <p class="status-bar-field">Данные: MusicBrainz{% if lastfm_enabled %}, Last.fm{% else %} (Last.fm выключен: нет ключа){% endif %}</p>
+    <p class="status-bar-field">Иконки: <a href="{{ url_for('main.about') }}#credits">Silk, CC BY 2.5</a></p>
+    <p class="status-bar-field">{{ now.strftime('%H:%M') }}</p>
+  </footer>
+</div>
+
+{# Маскот: анимированная SD-карта в правом нижнем углу.
+   Без JS это обычная ссылка на /recognize#recognize, с JS (mascot.js) клик
+   прокручивает к окну "Что играет?", если оно есть на текущей странице.
+   Подсказка - свой элемент в стиле системной tooltip Windows, а не title:
+   браузерный title нельзя оформить и он появляется с большой задержкой.
+   В data-quotes лежит весь список цитат, JS берёт случайную при каждом наведении.
+   Атрибут в одинарных кавычках: фильтр tojson экранирует ' внутри JSON,
+   поэтому такая запись безопасна (так рекомендует документация Flask). #}
+<a id="mascot" class="mascot" href="{{ url_for('recognize.recognize') }}#recognize"
+   aria-label="Что играет? Распознать песню" aria-describedby="mascot-tip"
+   data-quotes='{{ music_quotes|tojson }}'>
+  <img class="mascot-img" src="{{ url_for('static', filename='img/mascot.gif') }}" width="160" height="112" alt="">
+  <span id="mascot-tip" class="mascot-tooltip" role="tooltip">{{ mascot_quote }}</span>
+</a>
+<script src="{{ url_for('static', filename='js/mascot.js') }}"></script>
+<script src="{{ url_for('static', filename='js/recorder.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+{% from "_macros.html" import title_bar, recognize_form, message_box, silk %}
+{% block title %}Что играет?{% endblock %}
+{% block content %}
+{% if dialog %}
+{{ message_box(dialog.title, dialog.message, dialog.details, dialog.kind,
+               ok_url=url_for('recognize.recognize') ~ '#recognize',
+               extra={'url': url_for('main.index'), 'label': 'На главную'}) }}
+{% endif %}
+
+<section class="window" id="recognize">
+  {{ title_bar("Мастер распознавания музыки", url_for('main.index')) }}
+  <div class="window-body wizard">
+    <div class="wizard-side" aria-hidden="true">
+      {{ silk('cd', 64) }}
+    </div>
+    <div class="wizard-main">
+      <h1 class="props-title">Что играет?</h1>
+      <p>Этот мастер поможет узнать название песни по записи.</p>
+      <ol class="wizard-steps">
+        <li>Запишите 10-20 секунд песни на телефон или возьмите готовый файл.</li>
+        <li>Выберите файл ниже и нажмите <b>Распознать</b>.</li>
+        <li>Если трек найдётся, откроется его страница в вики.</li>
+      </ol>
+      <hr class="etched">
+      {{ recognize_form(max_upload_mb, audd_enabled) }}
+    </div>
+  </div>
+  <div class="status-bar">
+    <p class="status-bar-field">Распознавание: AudD</p>
+    <p class="status-bar-field">Повторная загрузка того же файла не тратит запрос</p>
+  </div>
+</section>
+{% endblock %}

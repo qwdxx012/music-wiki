@@ -1,0 +1,382 @@
+/* Стили сайта поверх xp.css.
+   xp.css рисует окна, заголовки, кнопки, поля и вкладки в стиле Windows XP.
+   Здесь только то, чего в нём нет: раскладка страницы, кнопки-ссылки,
+   таблицы-проводник, прогресс-бар, окно cmd, маскот и его подсказка. */
+:root {
+  --xp-face: #ece9d8;        /* цвет "поверхности" окон XP */
+  --xp-desktop: #3a6ea5;     /* рабочий стол без обоев */
+  --xp-select: #316ac5;      /* выделение в меню и списках */
+  --xp-border: #7f9db9;      /* рамка полей ввода и "вдавленных" панелей */
+  --xp-btn-border: #003c74;
+  --link: #0000ee;
+}
+
+/* Атрибут hidden должен побеждать любые display из CSS (например, flex) */
+[hidden] { display: none !important; }
+
+html, body { background: var(--xp-desktop); }
+body {
+  margin: 0;
+  font-family: Tahoma, "Segoe UI", Verdana, sans-serif;
+  font-size: 12px;
+}
+
+.page {
+  max-width: 980px;
+  margin: 0 auto;
+  /* снизу место под маскота, чтобы он не закрывал подвал */
+  padding: 12px 12px 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+main { display: flex; flex-direction: column; gap: 12px; }
+
+a { color: var(--link); }
+a:visited { color: #551a8b; }
+.muted { color: #555; }
+.muted-row a { color: #555; }
+p { line-height: 1.5; }
+
+/* ----- иконки Silk -----
+   Иконки 16x16. Для крупных (32x32) увеличиваем вдвое без размытия:
+   pixelated сохраняет чёткие пиксели, как в старых системах */
+.silk { vertical-align: middle; }
+.silk-2x { image-rendering: pixelated; }
+
+/* ----- шапка ----- */
+.menubar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding-bottom: 3px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #aca899;
+  box-shadow: 0 1px #fff;
+}
+.menubar a { color: #000; text-decoration: none; padding: 3px 8px; }
+.menubar a:hover, .menubar a.active { background: var(--xp-select); color: #fff; }
+
+.addressbar { display: flex; align-items: center; gap: 6px; }
+.addressbar input[type="text"] { flex: 1; min-width: 0; }
+
+/* кнопка "Закрыть" обёрнута в <form>, форма не должна ломать ряд кнопок */
+.title-bar-controls form { display: contents; }
+
+/* ----- раскладка ----- */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+.search-form fieldset { margin-top: 10px; }
+.search-form input[type="text"] { width: 100%; box-sizing: border-box; }
+
+.tip-body { display: flex; gap: 12px; align-items: flex-start; }
+.tip-body p { margin: 0 0 6px; }
+
+/* ----- ссылки, которые выглядят как кнопки xp.css ----- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 75px;
+  min-height: 23px;
+  padding: 0 12px;
+  border: 1px solid var(--xp-btn-border);
+  border-radius: 3px;
+  background: linear-gradient(180deg, #fff, #ecebe6 86%, #d6d0c5);
+  color: #000 !important;
+  font-size: 11px;
+  text-decoration: none;
+}
+.btn:hover {
+  box-shadow: inset -1px 1px #fff0cf, inset 1px 2px #fdd889, inset -2px 2px #fbc761,
+    inset 2px -2px #e5a01a;
+}
+.btn.default { box-shadow: inset -1px 1px #cee7ff, inset 1px 2px #98b8ea, inset -2px 2px #bcd4f6,
+    inset 1px -1px #89ade4, inset 2px -2px #89ade4; }
+.btn:active { background: linear-gradient(180deg, #cdcac3, #e3e3db 8%, #e5e5de 94%, #f2f2f1); box-shadow: none; }
+.btn:focus-visible { outline: 1px dotted #000; outline-offset: -4px; }
+
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; }
+
+.dialog-buttons { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.dialog-buttons.centered { justify-content: center; }
+
+/* жёлтая плашка-предупреждение и полоса уведомлений как в IE6 */
+.notice { background: #ffffe1; border: 1px solid #000; padding: 6px 8px; margin: 0 0 8px; }
+.infobar {
+  display: flex; align-items: center; gap: 8px;
+  margin: 0; padding: 5px 8px;
+  background: #ffffe1; border: 1px solid #000;
+}
+
+/* ----- таблицы "как в проводнике" ----- */
+.table-wrap { max-height: 60vh; overflow: auto; }
+.explorer { width: 100%; }
+.explorer td { vertical-align: top; }
+.explorer td:nth-child(3), .explorer td:last-child { white-space: nowrap; }
+
+/* иконка слева от ссылки: трек, альбом, исполнитель */
+.icon-track, .icon-album, .icon-artist {
+  padding-left: 20px;
+  background-repeat: no-repeat;
+  background-position: 0 50%;
+}
+.icon-track { background-image: url("../img/silk/music.png"); }
+.icon-album { background-image: url("../img/silk/cd.png"); }
+.icon-artist { background-image: url("../img/silk/user.png"); }
+
+.toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+
+/* ----- окно "Свойства" (трек, артист) ----- */
+.props-general, .artist-head { display: flex; gap: 16px; align-items: flex-start; }
+.props-main { flex: 1; min-width: 0; }
+.props-title { font-size: 16px; margin: 0 0 4px; }
+.props-table { border-collapse: collapse; }
+.props-table th { text-align: left; font-weight: normal; padding: 3px 16px 3px 0; vertical-align: top; white-space: nowrap; }
+.props-table td { padding: 3px 0; }
+hr.etched { border: 0; border-top: 1px solid #aca899; border-bottom: 1px solid #fff; margin: 8px 0; }
+fieldset { margin-top: 10px; }
+fieldset p:first-of-type { margin-top: 0; }
+
+.cover-box { flex: 0 0 auto; padding: 3px; background: #fff; border: 1px solid var(--xp-border); }
+.cover, .avatar { display: block; object-fit: cover; }
+.cover { width: 200px; height: 200px; }
+.avatar { width: 128px; height: 128px; }
+/* заглушка вместо обложки или фото: иконка Silk по центру белого квадрата */
+.placeholder { display: flex; align-items: center; justify-content: center; background: #fff; }
+
+.credit-list { margin: 0; padding-left: 18px; }
+.credit-list li { margin: 3px 0; }
+
+details summary { cursor: pointer; margin: 6px 0; }
+details.more { margin-top: 10px; }
+
+/* ----- сегментированный прогресс-бар (похожесть артистов, запись, отправка) ----- */
+.seg-progress {
+  height: 14px;
+  padding: 2px;
+  margin: 4px 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #686868;
+  border-radius: 3px;
+}
+.seg-progress-bar {
+  height: 100%;
+  background: repeating-linear-gradient(90deg, #37c837 0 8px, transparent 8px 10px);
+}
+/* неопределённый прогресс: зелёные "кирпичики" бегут по кругу, пока ждём AudD */
+.seg-progress.marquee .seg-progress-bar { width: 30%; animation: marquee 1.6s linear infinite; }
+@keyframes marquee { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+
+/* ----- похожие исполнители ----- */
+.similar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.similar-card {
+  display: block;
+  padding: 8px;
+  border: 1px solid #aca899;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #fff, #f3f2ea);
+  color: #000 !important;
+  text-decoration: none;
+}
+.similar-card:hover { border-color: var(--xp-select); }
+.similar-card:hover .similar-name { color: var(--xp-select); text-decoration: underline; }
+.similar-card:focus-visible { outline: 1px dotted #000; outline-offset: -5px; }
+.similar-name { display: block; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ----- окна-сообщения об ошибках ----- */
+.error-dialog { width: 100%; max-width: 440px; margin: 40px auto; }
+.error-dialog + .window { margin-top: 0; }
+.error-body { display: flex; gap: 14px; align-items: flex-start; }
+.error-icon { flex: 0 0 32px; }
+.error-body p { margin: 0 0 6px; }
+
+/* тот же диалог поверх страницы (ошибки записи с микрофона, recorder.js) */
+.sys-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, .15);
+}
+.sys-dialog .error-dialog { margin: 0; }
+
+/* ----- подвал ----- */
+.site-footer { background: var(--xp-face); border: 1px solid #aca899; padding: 2px; }
+.site-footer .status-bar-field:last-child { flex: 0 0 auto; }
+
+/* ----- форма распознавания ----- */
+.recognize-form .field-row-stacked { margin-bottom: 8px; }
+.recognize-form input[type="file"] { max-width: 100%; }
+.upload-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.busy p { margin: 8px 0 2px; }
+/* второе поле (диктофон телефона) нужно только на сенсорных экранах:
+   pointer: fine = есть мышь, значит это компьютер */
+@media (pointer: fine) { .mobile-only { display: none; } }
+
+.rec-status { margin: 8px 0; padding: 6px 8px; background: #fff; border: 1px solid var(--xp-border); }
+.rec-status p { margin: 0 0 4px; }
+.rec-status .dialog-buttons { margin-top: 6px; }
+/* мигающая красная точка "идёт запись" */
+.rec-dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  margin-right: 6px;
+  vertical-align: -1px;
+  background: #e00;
+  border: 1px solid #800;
+  border-radius: 50%;
+  animation: rec-blink 1s steps(1) infinite;
+}
+@keyframes rec-blink { 50% { visibility: hidden; } }
+
+/* подсветка окна после клика по маскоту: заголовок несколько раз
+   "гаснет" и загорается, как FlashWindow в Windows */
+.window.flash .title-bar { animation: flash-title .3s steps(1) 6; }
+@keyframes flash-title {
+  0% { filter: saturate(.2) brightness(1.25); }
+  50% { filter: none; }
+}
+
+/* ----- окно-мастер как в установщиках ----- */
+.wizard { display: flex; gap: 16px; align-items: stretch; }
+.wizard-side {
+  flex: 0 0 150px;
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 12px 8px;
+  background: linear-gradient(180deg, #0a246a 0%, #3a6ea5 100%);
+}
+.wizard-main { flex: 1; min-width: 0; }
+.wizard-steps { padding-left: 20px; }
+.wizard-steps li { margin: 4px 0; }
+
+/* ----- ярлыки жанров как на рабочем столе ----- */
+.desktop-icons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 84px);
+  gap: 6px;
+  padding: 10px;
+  background: #fff;
+}
+.desk-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 2px;
+  color: #000 !important;
+  text-decoration: none;
+  text-align: center;
+}
+.desk-icon span { padding: 1px 3px; border: 1px dotted transparent; }
+.desk-icon:hover span, .desk-icon:focus-visible span { background: var(--xp-select); color: #fff; }
+/* выделенный значок в XP становится синеватым */
+.desk-icon:hover img, .desk-icon:focus-visible img { filter: brightness(.8) sepia(1) hue-rotate(180deg) saturate(3); }
+.desk-icon:focus-visible { outline: none; }
+
+.fact { margin: 0 0 6px; }
+
+/* ----- бегущая строка: окно cmd.exe -----
+   Рамка и заголовок окна остаются от xp.css, как у всех окон на странице.
+   Меняется только внутренняя область: чёрный экран с серым моноширинным
+   текстом, как в настоящей командной строке Windows XP (#c0c0c0 на #000). */
+.cmd-screen {
+  display: flex;
+  align-items: center;
+  gap: 1ch;
+  padding: 4px 6px;
+  background: #0c0c0c;
+  color: #c0c0c0;
+  font-family: Consolas, "Lucida Console", "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.cmd-screen ::selection { background: #c0c0c0; color: #0c0c0c; }
+.cmd-prompt { flex: 0 0 auto; }
+.ticker-viewport { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; }
+.ticker-track {
+  display: inline-flex;
+  /* подсказка браузеру: этот блок будет двигаться, пусть анимирует его на видеокарте */
+  will-change: transform;
+  /* лента едет слева направо: старт со сдвигом -50% (видна вторая копия),
+     едем к 0, и в этот момент картинка совпадает со стартовой */
+  animation: ticker-ltr var(--ticker-duration, 120s) linear infinite;
+}
+/* навели мышь - лента останавливается, чтобы факт можно было дочитать */
+.cmd-screen:hover .ticker-track { animation-play-state: paused; }
+.ticker-list { display: inline-flex; margin: 0; padding: 0; list-style: none; }
+.ticker-list li::after { content: "|"; color: #808080; padding: 0 2ch; }
+@keyframes ticker-ltr {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+
+/* ----- маскот: анимированная SD-карта ----- */
+.mascot {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1000;
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
+}
+.mascot-img { display: block; }
+.mascot:focus-visible { outline: 1px dotted #000; outline-offset: 2px; }
+
+/* Подсказка как системная tooltip Windows: светло-жёлтый фон #ffffe1,
+   тонкая чёрная рамка, мелкий Tahoma, лёгкая тень. Без "хвостика" -
+   у настоящих tooltip его нет. */
+.mascot-tooltip {
+  position: absolute;
+  right: 8px;
+  bottom: calc(100% + 4px);
+  width: max-content;
+  max-width: 240px;
+  padding: 2px 6px 3px;
+  background: #ffffe1;
+  color: #000;
+  border: 1px solid #000;
+  box-shadow: 2px 2px 3px rgba(0, 0, 0, .35);
+  font: 11px/1.35 Tahoma, "Segoe UI", sans-serif;
+  text-align: left;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  /* при уходе мыши прячем сразу */
+  transition: opacity .1s, visibility 0s linear .1s;
+}
+/* при наведении показываем через 0.4 с, как в Windows: подсказка не мелькает,
+   если мышь просто пролетела мимо */
+.mascot:hover .mascot-tooltip, .mascot:focus-visible .mascot-tooltip {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity .1s linear .4s, visibility 0s linear .4s;
+}
+
+/* ----- узкие экраны ----- */
+@media (max-width: 720px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .props-general, .artist-head { flex-direction: column; }
+  .addressbar { flex-wrap: wrap; }
+  .addressbar label { display: none; }
+  .cover { width: 160px; height: 160px; }
+  .mascot { right: 8px; bottom: 8px; }
+  .mascot-img { width: 110px; height: 77px; }
+  .page { padding-bottom: 100px; }
+  .wizard { flex-direction: column; }
+  .wizard-side { flex-basis: auto; justify-content: flex-start; }
+}
+
+/* Пользователь попросил систему уменьшить анимацию: выключаем наши.
+   Сам GIF маскота CSS остановить не может, это ограничение формата */
+@media (prefers-reduced-motion: reduce) {
+  .seg-progress.marquee .seg-progress-bar, .window.flash .title-bar, .rec-dot { animation: none !important; }
+  .ticker-track { animation: none !important; transform: none !important; }
+  .ticker-viewport { overflow-x: auto; }
+}

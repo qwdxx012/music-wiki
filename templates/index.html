@@ -1,0 +1,136 @@
+{% extends "layout.html" %}
+{% from "_macros.html" import title_bar, recognize_form, silk %}
+{% block title %}Главная{% endblock %}
+{% block content %}
+
+{# Бегущая строка в окне "Командная строка". Рамка окна - обычная XP (как у
+   всех окон), а внутри - экран cmd.exe: чёрный фон, серый моноширинный текст.
+   Список фактов выводится дважды подряд: анимация сдвигает ленту ровно на
+   половину (на одну копию), и в этот момент картинка совпадает с начальной,
+   поэтому цикл получается бесшовным. Длительность зависит от длины текста,
+   чтобы скорость прокрутки была одинаковой при любом числе фактов #}
+{% if ticker %}
+{% set ticker_chars = ticker|join(' ')|length %}
+<section class="window" aria-label="Интересные факты о музыке">
+  {{ title_bar("C:\\WINDOWS\\system32\\cmd.exe - facts.bat") }}
+  <div class="window-body">
+    <div class="cmd-screen">
+      <span class="cmd-prompt" aria-hidden="true">C:\MUSIC&gt;</span>
+      <div class="ticker-viewport">
+        <div class="ticker-track" style="--ticker-duration: {{ [60, (ticker_chars * 0.11)|round|int]|max }}s">
+          {% for copy in range(2) %}
+          <ul class="ticker-list" {% if copy %}aria-hidden="true"{% endif %}>
+            {% for fact in ticker %}<li>{{ fact }}</li>{% endfor %}
+          </ul>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<div class="grid-2">
+  <section class="window">
+    {{ title_bar("Найти: песни и исполнителей") }}
+    <div class="window-body">
+      <p>Введите название песни, имя исполнителя или и то и другое.</p>
+      <form action="{{ url_for('main.search') }}" method="get" class="search-form">
+        <div class="field-row-stacked">
+          <label for="q">Что ищем?</label>
+          <input id="q" name="q" type="text" required autofocus placeholder="например: Queen Bohemian Rhapsody">
+        </div>
+        <fieldset>
+          <legend>Искать среди</legend>
+          <div class="field-row">
+            <input id="t-track" type="radio" name="type" value="track" checked>
+            <label for="t-track">треков</label>
+          </div>
+          <div class="field-row">
+            <input id="t-artist" type="radio" name="type" value="artist">
+            <label for="t-artist">исполнителей</label>
+          </div>
+        </fieldset>
+        <div class="dialog-buttons">
+          {# "Мне повезёт": случайный артист из локального кэша, см. main.random_artist #}
+          <a class="btn icon-btn" href="{{ url_for('main.random_artist') }}" title="Случайный исполнитель из уже открытых страниц">
+            {{ silk('wand') }}Мне повезёт
+          </a>
+          <button type="submit" class="default">Найти</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section class="window" id="recognize">
+    {{ title_bar("Что играет?") }}
+    <div class="window-body">
+      <p>Загрузите кусочек аудио или запишите звук с микрофона, и мы попробуем узнать трек.</p>
+      {{ recognize_form(max_upload_mb, audd_enabled) }}
+    </div>
+  </section>
+</div>
+
+{# Ярлыки жанров и эпох, как значки в "Мой компьютер" #}
+<section class="window">
+  {{ title_bar("Мой компьютер: Жанры и эпохи") }}
+  <div class="window-body">
+    <nav class="desktop-icons sunken-panel" aria-label="Жанры и эпохи">
+      {% for key, g in genres.items() %}
+      <a class="desk-icon" href="{{ url_for('main.search', genre=key) }}">
+        <img class="silk silk-2x" src="{{ url_for('static', filename='img/silk/' ~ g.icon) }}" width="32" height="32" alt="">
+        <span>{{ g.label }}</span>
+      </a>
+      {% endfor %}
+    </nav>
+  </div>
+  <div class="status-bar">
+    <p class="status-bar-field">Объектов: {{ genres|length }}</p>
+    <p class="status-bar-field">Топы: Last.fm, фильтры: MusicBrainz</p>
+  </div>
+</section>
+
+<div class="grid-2">
+  {# История музыки: этот день (services/facts.py) #}
+  <section class="window">
+    {{ title_bar("История музыки: этот день") }}
+    <div class="window-body tip-body">
+      {{ silk('calendar', 32) }}
+      <div>
+        {% if today.is_today %}
+        <p><b>Сегодня, {{ today.day }}</b></p>
+        {% else %}
+        <p><b>Сегодня в архиве пусто. Ближайшая дата: {{ today.day }}</b></p>
+        {% endif %}
+        {% for f in today.facts %}
+        <p class="fact">
+          {% if f.artist_id %}
+          <a href="{{ url_for('main.artist', mbid=f.artist_id) }}">{{ f.date_text }} {{ f.text }}</a>
+          {% else %}
+          {{ f.date_text }} {{ f.text }}
+          {% endif %}
+          <span class="muted">({{ f.source }})</span>
+        </p>
+        {% else %}
+        <p class="muted">Фактов пока нет. Пополните data/on_this_day.json или откройте пару страниц артистов.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="window">
+    {{ title_bar("Совет дня") }}
+    <div class="window-body tip-body">
+      {{ silk('lightbulb', 32) }}
+      <div>
+        <p><b>Знаете ли вы...</b> что в поиске работает синтаксис MusicBrainz? Например,
+          <a href="{{ url_for('main.search', q='artist:"Pink Floyd" AND recording:Time', type='track') }}">artist:"Pink Floyd" AND recording:Time</a>.</p>
+        <p>Попробуйте:
+          <a href="{{ url_for('main.search', q='Smells Like Teen Spirit') }}">Smells Like Teen Spirit</a>,
+          <a href="{{ url_for('main.search', q='Кино', type='artist') }}">Кино</a>,
+          <a href="{{ url_for('main.search', q='Daft Punk', type='artist') }}">Daft Punk</a>.</p>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
