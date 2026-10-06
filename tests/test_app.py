@@ -27,6 +27,7 @@ def test_empty_search_redirects_to_index(client):
 
 
 def test_num_filter(app):
+    assert app.jinja_env.filters["num"](1000) == "1 000"
     num = app.jinja_env.filters["num"]
     assert num(1234567) == "1 234 567"
     assert num("abc") == "abc"
