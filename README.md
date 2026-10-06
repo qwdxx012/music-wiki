@@ -32,3 +32,17 @@ flask --app app run --debug
 при поиске и при распознавании аудио. Демонстрационные данные: `python scripts/seed_demo.py`.
 
 ![ER-диаграмма](docs/ER_diagram.png)
+## Docker и CI/CD
+
+```bash
+docker build -t music-wiki .
+docker run -p 5000:5000 --env-file .env music-wiki
+```
+
+Готовый образ публикуется GitHub Actions в GitHub Container Registry при каждом push в `main`:
+
+```bash
+docker pull ghcr.io/qwdxx012/music-wiki:latest
+```
+
+Workflow: `.github/workflows/build.yml` (задачи `test` → `build`).
