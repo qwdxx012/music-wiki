@@ -35,3 +35,8 @@ def test_num_filter(app):
 def test_recognize_page_opens(client):
     response = client.get("/recognize")
     assert response.status_code in (200, 302)
+
+
+def test_about_page_is_html(client):
+    response = client.get("/about")
+    assert "text/html" in response.content_type
