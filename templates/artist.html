@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 {% from "_macros.html" import title_bar, progress, silk %}
-{% block title %}{{ artist.name }}{% endblock %}
+{% block title %}{{ artist.name }} - исполнитель{% endblock %}
+{% block description %}Исполнитель {{ artist.name }}: биография, дискография и похожие артисты в Music Wiki.{% endblock %}
 {% block content %}
 <section class="window">
   {{ title_bar("Исполнитель: " ~ artist.name, url_for('main.index')) }}
@@ -8,7 +9,7 @@
     <div class="artist-head">
       <div class="cover-box">
         {% if info and info.image %}
-        <img class="avatar" src="{{ info.image }}" alt="{{ artist.name }}">
+        <img class="avatar" src="{{ info.image }}" width="128" height="128" decoding="async" alt="{{ artist.name }}">
         {% else %}
         <span class="avatar placeholder" role="img" aria-label="Нет фото">{{ silk('user', 64) }}</span>
         {% endif %}
@@ -74,7 +75,7 @@
 
 <div class="grid-2">
   <section class="window">
-    {{ title_bar("Дискография") }}
+    {{ title_bar("Дискография", level=2) }}
     <div class="window-body">
       {% if failed.disco %}
       <p class="notice">Дискография временно недоступна: MusicBrainz не ответил.</p>
@@ -115,7 +116,7 @@
   </section>
 
   <section class="window">
-    {{ title_bar("Рекомендуем послушать ещё") }}
+    {{ title_bar("Рекомендуем послушать ещё", level=2) }}
     <div class="window-body">
       {% if similar %}
       <div class="similar-grid">

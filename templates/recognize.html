@@ -1,6 +1,8 @@
 {% extends "layout.html" %}
 {% from "_macros.html" import title_bar, recognize_form, message_box, silk %}
-{% block title %}Что играет?{% endblock %}
+{% block title %}Что играет? Распознавание музыки{% endblock %}
+{% block description %}Распознавание музыки по записи: загрузите аудиофайл или запишите звук с микрофона, а Music Wiki найдёт трек.{% endblock %}
+{% block robots %}{% if dialog %}<meta name="robots" content="noindex, nofollow">{% endif %}{% endblock %}
 {% block content %}
 {% if dialog %}
 {{ message_box(dialog.title, dialog.message, dialog.details, dialog.kind,

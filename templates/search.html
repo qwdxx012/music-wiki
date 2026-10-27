@@ -1,11 +1,14 @@
 {% extends "layout.html" %}
 {% from "_macros.html" import title_bar, artist_links %}
 {% block title %}Поиск: {{ heading }}{% endblock %}
+{% block description %}Результаты поиска по запросу {{ heading }} в Music Wiki.{% endblock %}
+{% block robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
 {% block content %}
 {% set g = genre_key or None %}
 <section class="window">
   {{ title_bar("Результаты поиска: " ~ heading, url_for('main.index')) }}
   <div class="window-body">
+    <h1 class="props-title">Результаты поиска: {{ heading }}</h1>
 
     {# Фильтр по жанру/эпохе. Своего текстового поля здесь нет намеренно:
        текст запроса вводится в адресной строке в шапке, а сюда он приходит

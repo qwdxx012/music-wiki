@@ -1,12 +1,14 @@
 {% extends "layout.html" %}
 {% from "_macros.html" import title_bar, artist_links, people, cover %}
-{% block title %}{{ rec.title }}{% endblock %}
+{% block title %}{{ rec.title }} - запись{% endblock %}
+{% block description %}Запись {{ rec.title }}{% if rec.artists %} исполнителя {{ rec.artists[0].name }}{% endif %}: альбом, год, студия, авторы и состав.{% endblock %}
 {% block content %}
 {% set c = rec.credits %}
 {% set first_artist = rec.artists[0] if rec.artists else None %}
 <section class="window">
   {{ title_bar("Свойства: " ~ rec.title, url_for('main.index')) }}
   <div class="window-body">
+    <h1 class="props-title track-title">{{ rec.title }}</h1>
     <menu role="tablist">
       {% for key, label in tabs.items() %}
       <li role="tab" {% if key == tab %}aria-selected="true"{% endif %}>
@@ -21,7 +23,6 @@
         <div class="props-general">
           {{ cover(lfm.image if lfm else None, rec.cover_url, rec.title) }}
           <div class="props-main">
-            <h1 class="props-title">{{ rec.title }}</h1>
             {% if rec.disambiguation %}<p class="muted">({{ rec.disambiguation }})</p>{% endif %}
             <hr class="etched">
             <table class="props-table">

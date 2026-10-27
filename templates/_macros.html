@@ -17,9 +17,13 @@
 </div>
 {%- endmacro %}
 
-{% macro title_bar(text, close_url=None) -%}
+{% macro title_bar(text, close_url=None, level=None) -%}
 <div class="title-bar">
+  {% if level %}
+  <h{{ level }} class="title-bar-text">{{ text }}</h{{ level }}>
+  {% else %}
   <div class="title-bar-text">{{ text }}</div>
+  {% endif %}
   {{ window_controls(close_url) }}
 </div>
 {%- endmacro %}
@@ -58,9 +62,9 @@
 {% macro cover(lastfm_url, caa_url, alt) -%}
 <div class="cover-box">
   {%- if lastfm_url %}
-  <img class="cover" src="{{ lastfm_url }}" alt="{{ alt }}">
+  <img class="cover" src="{{ lastfm_url }}" width="200" height="200" decoding="async" alt="{{ alt }}">
   {%- elif caa_url %}
-  <object class="cover" data="{{ caa_url }}" type="image/jpeg" aria-label="{{ alt }}">
+  <object class="cover" data="{{ caa_url }}" type="image/jpeg" width="200" height="200" aria-label="{{ alt }}">
     <span class="cover placeholder" role="img" aria-label="Нет обложки">{{ silk('cd', 64) }}</span>
   </object>
   {%- else %}
@@ -135,10 +139,10 @@
 {# Окно-сообщение: kind = error | warning | info.
    В Silk "error" - это жёлтый треугольник, поэтому для ошибки берём
    красный "exclamation", а для предупреждения - "error" #}
-{% macro message_box(title, message, details=None, kind="error", ok_url="/", extra=None) -%}
+{% macro message_box(title, message, details=None, kind="error", ok_url="/", extra=None, heading_level=None) -%}
 {%- set icons = {"error": "exclamation", "warning": "error", "info": "information"} %}
 <section class="window error-dialog" role="alertdialog" aria-labelledby="msg-text">
-  {{ title_bar(title, ok_url) }}
+  {{ title_bar(title, ok_url, level=heading_level) }}
   <div class="window-body">
     <div class="error-body">
       <span class="error-icon">{{ silk(icons.get(kind, "exclamation"), 32) }}</span>

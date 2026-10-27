@@ -32,6 +32,16 @@ flask --app app run --debug
 при поиске и при распознавании аудио. Демонстрационные данные: `python scripts/seed_demo.py`.
 
 ![ER-диаграмма](docs/ER_diagram.png)
+
+## SEO
+
+- `SITE_URL` в `.env` задает публичный адрес для canonical, `robots.txt` и `sitemap.xml`.
+  По умолчанию стоит `https://example.com`, при публикации его нужно заменить.
+- `/robots.txt` и `/sitemap.xml` отдает Flask. В sitemap попадают статические
+  страницы и карточки артистов и треков из базы.
+- Статика кэшируется, у изображений заданы размеры, GIF маскота облегчен.
+- Итоги и скриншоты Lighthouse лежат в `docs/seo/`.
+
 ## Docker и CI/CD
 
 ```bash
