@@ -10,6 +10,10 @@ load_dotenv(BASE_DIR / ".env")
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-change-me")
 
+    # Публичный адрес сайта для canonical, robots.txt и sitemap.xml.
+    # Пока своего домена нет, используем заглушку из задания.
+    SITE_URL = os.getenv("SITE_URL", "https://example.com").rstrip("/")
+
     LASTFM_API_KEY = os.getenv("LASTFM_API_KEY", "")
     # MusicBrainz просит указывать в User-Agent имя приложения и контакт,
     # иначе может начать отвечать 403/503 на наши запросы
@@ -23,6 +27,10 @@ class Config:
     # Сырые ответы MusicBrainz меняются редко, поэтому храним их неделю
     MB_CACHE_TTL = int(os.getenv("MB_CACHE_TTL", 7 * 24 * 3600))
     LASTFM_CACHE_TTL = int(os.getenv("LASTFM_CACHE_TTL", 24 * 3600))
+
+    # Статика (CSS, JS, PNG) между запросами не меняется, поэтому браузер
+    # может держать её в кэше час и не перекачивать при каждом переходе
+    SEND_FILE_MAX_AGE_DEFAULT = int(os.getenv("STATIC_CACHE_SECONDS", 3600))
 
     # Таймаут на КАЖДЫЙ запрос к MusicBrainz и Last.fm, секунды:
     # если сервис завис, страница не будет висеть вместе с ним

@@ -4,6 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Главная{% endblock %} | Music Wiki</title>
+  <meta name="description" content="{% block description %}Music Wiki - музыкальная вики в стиле Windows XP. Поиск песен и исполнителей, биографии, дискография, похожие артисты и распознавание музыки по записи.{% endblock %}">
+  {% block robots %}{% endblock %}
+  {% block canonical %}<link rel="canonical" href="{{ site_url }}{{ request.path }}">{% endblock %}
+  <meta property="og:title" content="{{ self.title()|trim }} | Music Wiki">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ site_url }}{{ request.path }}">
+  <meta property="og:image" content="{{ site_url }}{{ url_for('static', filename='img/mascot.gif') }}">
+  <meta property="og:image:alt" content="Music Wiki">
+  <meta property="og:description" content="{{ self.description()|trim }}">
+  <meta property="og:site_name" content="Music Wiki">
   <link rel="icon" href="{{ url_for('static', filename='img/silk/music.png') }}" type="image/png">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/xp.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
@@ -60,7 +70,7 @@
 <a id="mascot" class="mascot" href="{{ url_for('recognize.recognize') }}#recognize"
    aria-label="Что играет? Распознать песню" aria-describedby="mascot-tip"
    data-quotes='{{ music_quotes|tojson }}'>
-  <img class="mascot-img" src="{{ url_for('static', filename='img/mascot.gif') }}" width="160" height="112" alt="">
+  <img class="mascot-img" src="{{ url_for('static', filename='img/mascot-small.gif') }}" width="160" height="112" alt="">
   <span id="mascot-tip" class="mascot-tooltip" role="tooltip">{{ mascot_quote }}</span>
 </a>
 <script src="{{ url_for('static', filename='js/mascot.js') }}"></script>

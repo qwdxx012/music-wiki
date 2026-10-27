@@ -1,7 +1,18 @@
 {% extends "layout.html" %}
 {% from "_macros.html" import title_bar, recognize_form, silk %}
-{% block title %}Главная{% endblock %}
+{% block title %}Музыкальная энциклопедия{% endblock %}
+{% block description %}Music Wiki - музыкальная вики в стиле Windows XP: поиск песен и исполнителей, биографии, дискография и распознавание музыки по записи.{% endblock %}
 {% block content %}
+
+<section class="window page-intro">
+  {{ title_bar("Music Wiki") }}
+  <div class="window-body">
+    <h1 class="props-title">Music Wiki</h1>
+    <p>Музыкальная вики в стиле Windows XP: поиск песен и исполнителей,
+      карточки треков, биографии артистов, дискография и распознавание
+      музыки по записи.</p>
+  </div>
+</section>
 
 {# Бегущая строка в окне "Командная строка". Рамка окна - обычная XP (как у
    всех окон), а внутри - экран cmd.exe: чёрный фон, серый моноширинный текст.
@@ -32,7 +43,7 @@
 
 <div class="grid-2">
   <section class="window">
-    {{ title_bar("Найти: песни и исполнителей") }}
+    {{ title_bar("Найти: песни и исполнителей", level=2) }}
     <div class="window-body">
       <p>Введите название песни, имя исполнителя или и то и другое.</p>
       <form action="{{ url_for('main.search') }}" method="get" class="search-form">
@@ -63,7 +74,7 @@
   </section>
 
   <section class="window" id="recognize">
-    {{ title_bar("Что играет?") }}
+    {{ title_bar("Что играет?", level=2) }}
     <div class="window-body">
       <p>Загрузите кусочек аудио или запишите звук с микрофона, и мы попробуем узнать трек.</p>
       {{ recognize_form(max_upload_mb, audd_enabled) }}
@@ -73,7 +84,7 @@
 
 {# Ярлыки жанров и эпох, как значки в "Мой компьютер" #}
 <section class="window">
-  {{ title_bar("Мой компьютер: Жанры и эпохи") }}
+  {{ title_bar("Мой компьютер: Жанры и эпохи", level=2) }}
   <div class="window-body">
     <nav class="desktop-icons sunken-panel" aria-label="Жанры и эпохи">
       {% for key, g in genres.items() %}
@@ -93,7 +104,7 @@
 <div class="grid-2">
   {# История музыки: этот день (services/facts.py) #}
   <section class="window">
-    {{ title_bar("История музыки: этот день") }}
+    {{ title_bar("История музыки: этот день", level=2) }}
     <div class="window-body tip-body">
       {{ silk('calendar', 32) }}
       <div>
@@ -119,7 +130,7 @@
   </section>
 
   <section class="window">
-    {{ title_bar("Совет дня") }}
+    {{ title_bar("Совет дня", level=2) }}
     <div class="window-body tip-body">
       {{ silk('lightbulb', 32) }}
       <div>

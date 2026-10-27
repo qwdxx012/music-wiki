@@ -131,6 +131,18 @@ p { line-height: 1.5; }
 .props-general, .artist-head { display: flex; gap: 16px; align-items: flex-start; }
 .props-main { flex: 1; min-width: 0; }
 .props-title { font-size: 16px; margin: 0 0 4px; }
+/* Если заголовок окна сделан через h1-h6, ему нужны обычные размеры,
+   а не крупные значения из xp.css */
+h1.title-bar-text, h2.title-bar-text, h3.title-bar-text,
+h4.title-bar-text, h5.title-bar-text, h6.title-bar-text {
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: bold;
+  line-height: inherit;
+}
+.track-title { margin-bottom: 8px; }
+.page-intro .props-title { margin-bottom: 6px; }
 .props-table { border-collapse: collapse; }
 .props-table th { text-align: left; font-weight: normal; padding: 3px 16px 3px 0; vertical-align: top; white-space: nowrap; }
 .props-table td { padding: 3px 0; }

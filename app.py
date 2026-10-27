@@ -2,11 +2,12 @@ import logging
 import random
 from datetime import datetime
 
-from flask import Flask
+from flask import Flask, request
 
 from config import Config
 from routes.main import bp as main_bp
 from routes.recognize import bp as recognize_bp
+from routes.seo import bp as seo_bp
 from services.cache import DiskCache
 from services.store import WikiStore
 from services.quotes import MUSIC_QUOTES
@@ -30,6 +31,14 @@ def create_app(config_class=Config):
 
     app.register_blueprint(main_bp)
     app.register_blueprint(recognize_bp)
+    app.register_blueprint(seo_bp)
+
+    @app.after_request
+    def add_api_noindex(response):
+        # JSON-ответы и адреса /api/ не должны попадать в поиск
+        if request.path.startswith("/api/") or response.mimetype == "application/json":
+            response.headers["X-Robots-Tag"] = "noindex, nofollow"
+        return response
 
     @app.template_filter("num")
     def num_filter(value):
@@ -44,6 +53,7 @@ def create_app(config_class=Config):
         # Эти переменные доступны в любом шаблоне без передачи из каждого роута
         return {
             "now": datetime.now(),
+            "site_url": app.config["SITE_URL"].rstrip("/"),
             "lastfm_enabled": bool(app.config["LASTFM_API_KEY"]),
             "audd_enabled": bool(app.config["AUDD_API_TOKEN"]),
             "max_upload_mb": app.config["MAX_UPLOAD_MB"],
