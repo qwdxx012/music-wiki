@@ -81,7 +81,7 @@ https://music-wiki.localhost
 
 ![Вкладка Network](screenshots/network-api.png)
 
-Контейнеры проекта в Docker Desktop:
+Контейнеры проекта в Docker Desktop. Группа `deploy` раскрыта, в колонке Port(s) у nginx видны открытые порты:
 
 ![Контейнеры в Docker Desktop](screenshots/docker-desktop.png)
 
@@ -104,7 +104,7 @@ https://music-wiki.localhost
 
 3. В Microsoft Edge при запуске DevTools открывалась приветственная вкладка, и переключить ее на панель Network не удалось. Открыл проект в Google Chrome, включил DevTools, перешел на вкладку Network и выбрал запрос `/api/health`. В заголовках ответа виден `X-Robots-Tag: noindex, nofollow`.
 
-4. В Docker Desktop группа `deploy` показана свернутой. Порты контейнеров хорошо видны на скриншоте `docker compose ps`: у app только внутренний порт 5000, у nginx опубликованы `127.0.0.1:80` и `127.0.0.1:443`.
+4. В Docker Desktop контейнеры проекта были собраны в свернутую группу `deploy`, и открытых портов не было видно. Раскрыл группу стрелкой. После этого в списке появились `app-1` и `nginx-1`, а в колонке Port(s) виден порт `443:443` и ссылка `Show all ports (2)`. Полный список портов есть и на скриншоте `docker compose ps`: у app только внутренний порт 5000, у nginx опубликованы `127.0.0.1:80` и `127.0.0.1:443`.
 
 5. При первом запуске контейнера нужно было проверить права на папку `/app/instance`. В Dockerfile папка создается и передается пользователю `appuser`, поэтому SQLite смог создать базы. Внутри контейнера файлы принадлежат `appuser:appuser`.
 
