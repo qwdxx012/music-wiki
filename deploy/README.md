@@ -25,7 +25,8 @@ SQLite работает внутри контейнера app. Файлы баз
 | --- | --- | --- | --- |
 | app | Flask + Gunicorn | 5000 | Gunicorn |
 | nginx | nginx 1.30 | 80, 443 | - |
-| SQLite | SQLite, том `wiki_data` | - | - |
+
+SQLite не является отдельным сервисом. База работает внутри контейнера app, а файлы хранятся в томе `wiki_data`.
 
 ## 3. Переменные окружения и секреты
 
@@ -92,6 +93,7 @@ https://music-wiki.localhost
 - В `.dockerignore` добавлена папка `deploy/`, чтобы сертификаты и файлы отчета не попадали в образ.
 - Созданы `deploy/docker-compose.yml`, `deploy/nginx/nginx.conf` и `deploy/.gitignore`.
 - В nginx добавлены gzip, перенаправление HTTP на HTTPS, заголовки `X-Forwarded-*`, `X-Robots-Tag` для `/api/` и ограничение размера запроса `client_max_body_size 12m`. Ограничение нужно, потому что приложение принимает аудиофайлы до 10 МБ.
+- Заголовок `X-Robots-Tag` для JSON-ответов также добавляет Flask после SEO-задания. Поэтому в ответе `/api/health` он может быть указан дважды. Это не ошибка: nginx и приложение дополняют друг друга.
 - В GitHub Actions добавлена проверка сборки Docker-образа и валидация `docker-compose.yml`.
 
 ## 7. Ошибки и способы устранения
