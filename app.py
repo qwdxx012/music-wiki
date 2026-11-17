@@ -3,6 +3,7 @@ import random
 from datetime import datetime
 
 from flask import Flask, request
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
 from routes.main import bp as main_bp
@@ -21,6 +22,10 @@ logging.basicConfig(
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+
+    # nginx передает исходный домен и протокол в X-Forwarded-*.
+    # Без ProxyFix Flask считает, что запрос пришел по HTTP на внутренний адрес
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     # Один объект кэша на всё приложение. Сервисы достают его через
     # current_app.extensions, чтобы не открывать базу в каждом модуле заново

@@ -10,6 +10,7 @@ env/
 .gitignore
 .idea/
 .vscode/
+deploy/
 tests/
 pytest.ini
 requirements-dev.txt

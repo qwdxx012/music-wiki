@@ -42,6 +42,18 @@ flask --app app run --debug
 - Статика кэшируется, у изображений заданы размеры, GIF маскота облегчен.
 - Итоги и скриншоты Lighthouse лежат в `docs/seo/`.
 
+## Локальный деплой
+
+Репетиция деплоя с nginx, HTTPS и доменом `music-wiki.localhost` описана
+в [deploy/README.md](deploy/README.md). Запуск выполняется из папки `deploy`:
+
+```bash
+docker compose up --build -d
+```
+
+Проект открывается по адресу `https://music-wiki.localhost` и доступен
+только с этого компьютера. Сертификаты лежат в `deploy/certs/` и в git не попадают.
+
 ## Docker и CI/CD
 
 ```bash

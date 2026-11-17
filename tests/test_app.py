@@ -46,6 +46,13 @@ def test_about_page_is_html(client):
     assert "text/html" in response.content_type
 
 
+def test_health_api(client):
+    response = client.get("/api/health")
+    assert response.status_code == 200
+    assert response.get_json() == {"status": "ok", "service": "music-wiki"}
+    assert response.headers["X-Robots-Tag"] == "noindex, nofollow"
+
+
 def test_index_has_base_seo_tags(client):
     html = client.get("/").get_data(as_text=True)
     assert '<html lang="ru">' in html

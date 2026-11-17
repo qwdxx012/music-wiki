@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" font-family="Arial, sans-serif">
+  <rect width="960" height="420" fill="#f4f1e8"/>
+  <text x="480" y="42" text-anchor="middle" font-size="24" font-weight="bold" fill="#1f2d3d">Схема развертывания Music Wiki</text>
+
+  <rect x="30" y="150" width="180" height="100" rx="8" fill="#ffffff" stroke="#2f5f9e" stroke-width="2"/>
+  <text x="120" y="188" text-anchor="middle" font-size="18" font-weight="bold" fill="#1f2d3d">Браузер</text>
+  <text x="120" y="214" text-anchor="middle" font-size="14" fill="#334155">Chrome / Edge</text>
+
+  <rect x="280" y="150" width="200" height="100" rx="8" fill="#e8f0fb" stroke="#2f5f9e" stroke-width="2"/>
+  <text x="380" y="188" text-anchor="middle" font-size="18" font-weight="bold" fill="#1f2d3d">nginx</text>
+  <text x="380" y="214" text-anchor="middle" font-size="14" fill="#334155">443 HTTPS, 80 HTTP</text>
+
+  <rect x="550" y="150" width="200" height="100" rx="8" fill="#eef7ea" stroke="#3f7f3f" stroke-width="2"/>
+  <text x="650" y="182" text-anchor="middle" font-size="18" font-weight="bold" fill="#1f2d3d">app</text>
+  <text x="650" y="207" text-anchor="middle" font-size="14" fill="#334155">Gunicorn + Flask</text>
+  <text x="650" y="229" text-anchor="middle" font-size="14" fill="#334155">порт 5000</text>
+
+  <rect x="810" y="150" width="120" height="100" rx="8" fill="#fff4df" stroke="#9a6a1f" stroke-width="2"/>
+  <text x="870" y="188" text-anchor="middle" font-size="18" font-weight="bold" fill="#1f2d3d">SQLite</text>
+  <text x="870" y="214" text-anchor="middle" font-size="14" fill="#334155">volume</text>
+
+  <line x1="210" y1="200" x2="272" y2="200" stroke="#1f2d3d" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="480" y1="200" x2="542" y2="200" stroke="#1f2d3d" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="750" y1="200" x2="802" y2="200" stroke="#1f2d3d" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <text x="241" y="188" text-anchor="middle" font-size="13" fill="#334155">HTTPS 443</text>
+  <text x="511" y="188" text-anchor="middle" font-size="13" fill="#334155">HTTP 5000</text>
+  <text x="776" y="188" text-anchor="middle" font-size="13" fill="#334155">файлы БД</text>
+
+  <rect x="280" y="300" width="470" height="54" rx="8" fill="#ffffff" stroke="#b8b8b8"/>
+  <text x="515" y="324" text-anchor="middle" font-size="14" fill="#1f2d3d">HTTP на порту 80 перенаправляется на HTTPS с кодом 301</text>
+  <text x="515" y="344" text-anchor="middle" font-size="14" fill="#1f2d3d">Снаружи открыты только порты nginx на 127.0.0.1</text>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#1f2d3d"/>
+    </marker>
+  </defs>
+</svg>

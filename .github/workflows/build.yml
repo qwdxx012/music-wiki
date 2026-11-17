@@ -2,8 +2,8 @@ name: Test and Build Docker Image
 
 on:
   push:
-    branches: ["main"]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   test:
@@ -28,9 +28,28 @@ jobs:
       - name: Run tests
         run: pytest -v
 
+  docker:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Prepare env file for Compose
+        run: cp .env.example .env
+
+      - name: Validate Docker Compose
+        run: docker compose -f deploy/docker-compose.yml config
+
+      - name: Build application image
+        run: docker build -t music-wiki:ci .
+
   build:
-    needs: test
-    if: ${{ needs.test.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    needs: [test, docker]
+    if: ${{ needs.test.result == 'success' && needs.docker.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
 
     permissions:

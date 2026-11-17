@@ -1,7 +1,15 @@
 import logging
 import re
 
-from flask import Blueprint, current_app, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    current_app,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 
 from routes.safe import parallel, safe
 from services import facts, genres, lastfm
@@ -46,6 +54,12 @@ def index():
 @bp.route("/about")
 def about():
     return render_template("about.html")
+
+
+@bp.route("/api/health")
+def health():
+    """Служебная проверка для nginx и Docker Compose."""
+    return jsonify(status="ok", service="music-wiki")
 
 
 # ---------- поиск ----------
