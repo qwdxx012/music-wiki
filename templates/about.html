@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% from "_macros.html" import title_bar, silk %}
 {% block title %}О проекте{% endblock %}
-{% block description %}О проекте Music Wiki: технологии Flask и SQLite, внешние API MusicBrainz, Last.fm, AudD и Cover Art Archive.{% endblock %}
+{% block description %}О проекте Music Wiki: технологии Flask и Supabase, внешние API MusicBrainz, Last.fm, AudD и Cover Art Archive.{% endblock %}
 {% block content %}
 <section class="window">
   {{ title_bar("О проекте: Music Wiki", url_for('main.index')) }}
@@ -22,7 +22,7 @@
         <tr><th>Язык:</th><td>Python</td></tr>
         <tr><th>Веб-фреймворк:</th><td>Flask (шаблоны Jinja2)</td></tr>
         <tr><th>HTTP-запросы:</th><td>requests</td></tr>
-        <tr><th>Кэш:</th><td>SQLite (встроен в Python)</td></tr>
+        <tr><th>База данных:</th><td>Supabase (PostgreSQL)</td></tr>
         <tr><th>Интерфейс:</th><td>HTML, CSS, немного JavaScript</td></tr>
       </table>
     </fieldset>

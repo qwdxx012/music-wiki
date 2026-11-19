@@ -57,28 +57,23 @@ def sitemap_xml():
     store = current_app.extensions.get("wiki_store")
     if store:
         try:
-            with store.connect() as con:
-                artists = con.execute(
-                    "SELECT mbid, updated_at FROM artists ORDER BY name"
-                ).fetchall()
-                tracks = con.execute(
-                    "SELECT mbid, updated_at FROM tracks ORDER BY title"
-                ).fetchall()
+            artists = store.list_artists_for_sitemap()
+            tracks = store.list_tracks_for_sitemap()
         except Exception:  # noqa: BLE001
             current_app.logger.error("Не удалось собрать sitemap.xml", exc_info=True)
         else:
-            for mbid, updated_at in artists:
+            for row in artists:
                 urls.append(
                     {
-                        "loc": f"{site}{url_for('main.artist', mbid=mbid)}",
-                        "lastmod": _lastmod(updated_at),
+                        "loc": f"{site}{url_for('main.artist', mbid=row['mbid'])}",
+                        "lastmod": _lastmod(row.get("updated_at")),
                     }
                 )
-            for mbid, updated_at in tracks:
+            for row in tracks:
                 urls.append(
                     {
-                        "loc": f"{site}{url_for('main.track', mbid=mbid)}",
-                        "lastmod": _lastmod(updated_at),
+                        "loc": f"{site}{url_for('main.track', mbid=row['mbid'])}",
+                        "lastmod": _lastmod(row.get("updated_at")),
                     }
                 )
 

@@ -3,6 +3,8 @@ import random
 from datetime import datetime
 
 from flask import Flask, request
+from supabase import create_client
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
 from routes.main import bp as main_bp
@@ -22,12 +24,27 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Один объект кэша на всё приложение. Сервисы достают его через
-    # current_app.extensions, чтобы не открывать базу в каждом модуле заново
-    app.extensions["disk_cache"] = DiskCache(app.config["CACHE_DB"])
-    # Структурированная реляционная БД проекта (db/schema.sql), отдельно
-    # от технического кэша выше
-    app.extensions["wiki_store"] = WikiStore(app.config["WIKI_DB"])
+    # nginx передает исходный домен и протокол в X-Forwarded-*.
+    # Без ProxyFix Flask считает, что запрос пришел по HTTP на внутренний адрес
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
+    # Один клиент Supabase на всё приложение: и кэш, и предметная база
+    # работают через него. Без ключей сайт всё равно открывается, но
+    # данные не сохраняются - в лог попадает предупреждение
+    supabase_url = app.config["SUPABASE_URL"]
+    supabase_key = app.config["SUPABASE_KEY"]
+    supabase = None
+    if supabase_url and supabase_key:
+        supabase = create_client(supabase_url, supabase_key)
+    else:
+        logging.getLogger(__name__).warning(
+            "SUPABASE_URL и SUPABASE_KEY не заданы: база Supabase отключена"
+        )
+    app.extensions["supabase"] = supabase
+    # Key-value кэш ответов внешних API
+    app.extensions["disk_cache"] = DiskCache(supabase)
+    # Структурированная база проекта (db/supabase_schema.sql)
+    app.extensions["wiki_store"] = WikiStore(supabase)
 
     app.register_blueprint(main_bp)
     app.register_blueprint(recognize_bp)

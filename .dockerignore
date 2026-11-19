@@ -17,5 +17,4 @@ requirements-dev.txt
 docs/
 instance/*
 !instance/.gitkeep
-*.sqlite3
 .DS_Store

@@ -1,4 +1,4 @@
-"""Клиент MusicBrainz API: ограничение 1 запрос/с, кэш в SQLite, разбор ответов."""
+"""Клиент MusicBrainz API: ограничение 1 запрос/с, кэш в Supabase, разбор ответов."""
 
 import logging
 import re

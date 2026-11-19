@@ -20,10 +20,10 @@ class Config:
     MB_CONTACT = os.getenv("MB_CONTACT", "you@example.com")
     MB_USER_AGENT = f"MusicWiki/1.0 ( {MB_CONTACT} )"
 
-    CACHE_DB = os.getenv("CACHE_DB", str(BASE_DIR / "instance" / "cache.sqlite3"))
-    # Структурированная предметная БД (artists/albums/tracks/genres/facts/...),
-    # отдельно от технического key-value кэша выше. См. db/schema.sql
-    WIKI_DB = os.getenv("WIKI_DB", str(BASE_DIR / "instance" / "wiki.sqlite3"))
+    # Supabase: PostgreSQL-база проекта и REST API (PostgREST).
+    # URL проекта и ключ service_role хранятся только в .env
+    SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
     # Сырые ответы MusicBrainz меняются редко, поэтому храним их неделю
     MB_CACHE_TTL = int(os.getenv("MB_CACHE_TTL", 7 * 24 * 3600))
     LASTFM_CACHE_TTL = int(os.getenv("LASTFM_CACHE_TTL", 24 * 3600))

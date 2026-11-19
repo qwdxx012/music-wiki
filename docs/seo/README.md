@@ -12,7 +12,7 @@
 - `robots.txt` отдается по адресу `/robots.txt` и закрывает служебные разделы:
   `/search`, `/random`, `/track/lookup`, `/artist/lookup`, `/api/`.
 - `sitemap.xml` отдается по адресу `/sitemap.xml`. В него попадают главная,
-  `/about`, `/recognize`, а также карточки артистов и треков из SQLite.
+  `/about`, `/recognize`, а также карточки артистов и треков из Supabase.
 - На страницы ошибок, в результатах поиска и в диалогах распознавания добавлен
   `meta name="robots" content="noindex, nofollow"`.
 - Для JSON-ответов API добавлен заголовок `X-Robots-Tag: noindex, nofollow`.

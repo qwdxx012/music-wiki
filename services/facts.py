@@ -3,7 +3,7 @@
 Два источника фактов для "Этого дня":
 1. data/on_this_day.json - ручная таблица по ключу ММ-ДД (правится без
    перезапуска сервера).
-2. Таблица release_dates в SQLite - альбомы, которые уже встречались на
+2. Таблица release_dates в Supabase - альбомы, которые уже встречались на
    открытых страницах артистов. Так база фактов сама растёт, пока по вики ходят.
 """
 
@@ -41,8 +41,6 @@ RG_WORD = {"Album": "альбом", "EP": "EP", "Single": "сингл"}
 # Кэш прочитанных JSON-файлов в памяти: {путь: (время изменения, данные)}
 _json_cache = {}
 _json_lock = threading.Lock()
-# Для каких файлов базы уже создана таблица release_dates (делаем это один раз)
-_schema_ready = set()
 
 
 def _load_json(path, default):
@@ -74,25 +72,11 @@ def human_date(d, year=None):
     return f"{text} {year} года" if year else text
 
 
-# ---------- индекс релизов в SQLite ----------
+# ---------- индекс релизов в Supabase ----------
 
 
-def _db():
-    cache = current_app.extensions["disk_cache"]
-    if cache.path not in _schema_ready:
-        with cache.connect() as con:
-            con.execute(
-                "CREATE TABLE IF NOT EXISTS release_dates ("
-                " rg_id TEXT PRIMARY KEY, title TEXT NOT NULL, artist_id TEXT,"
-                " artist_name TEXT, rg_type TEXT, date TEXT NOT NULL,"
-                " month_day TEXT NOT NULL)"
-            )
-            # индекс по ММ-ДД: выборка "что вышло 24 сентября" не перебирает всю таблицу
-            con.execute(
-                "CREATE INDEX IF NOT EXISTS idx_release_md ON release_dates(month_day)"
-            )
-        _schema_ready.add(cache.path)
-    return cache.connect()
+def _store():
+    return current_app.extensions.get("wiki_store")
 
 
 def index_releases(artist, disco):
@@ -114,11 +98,7 @@ def index_releases(artist, disco):
     if not rows:
         return
     try:
-        with _db() as con:
-            con.executemany(
-                "INSERT OR REPLACE INTO release_dates VALUES (?, ?, ?, ?, ?, ?, ?)",
-                rows,
-            )
+        _store().upsert_release_dates(rows)
     except Exception:  # noqa: BLE001
         # Индекс фактов - приятный бонус, из-за него страница артиста падать не должна
         log.error("Не удалось обновить индекс релизов", exc_info=True)
@@ -126,20 +106,16 @@ def index_releases(artist, disco):
 
 def _releases_on(month_day, limit):
     try:
-        with _db() as con:
-            rows = con.execute(
-                "SELECT rg_id, title, artist_id, artist_name, rg_type, date"
-                " FROM release_dates WHERE month_day = ? ORDER BY RANDOM() LIMIT ?",
-                (month_day, limit),
-            ).fetchall()
+        rows = _store().random_releases(month_day, limit)
     except Exception:  # noqa: BLE001
         log.error("Не удалось прочитать индекс релизов", exc_info=True)
         return []
     return [
         {
-            "year": int(r[5][:4]),
-            "text": f"вышел {RG_WORD.get(r[4], 'релиз')} {r[3]} «{r[1]}»",
-            "artist_id": r[2],
+            "year": int(r["date"][:4]),
+            "text": f"вышел {RG_WORD.get(r['rg_type'], 'релиз')}"
+            f" {r['artist_name']} «{r['title']}»",
+            "artist_id": r["artist_id"],
             "source": "MusicBrainz",
         }
         for r in rows

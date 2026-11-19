@@ -1,85 +1,68 @@
-"""Key-value кэш на SQLite с временем жизни (TTL).
+"""Key-value кэш в Supabase с временем жизни (TTL).
 
 Зачем: MusicBrainz разрешает 1 запрос в секунду, у AudD всего 300 бесплатных
-распознаваний. Всё, что уже скачали, храним в файле instance/cache.sqlite3,
-и повторное открытие той же страницы не ходит в сеть.
+распознаваний. Всё, что уже скачали, храним в таблице cache, и повторное
+открытие той же страницы не ходит в сеть.
 
-Ошибки самой SQLite не роняют страницу: кэш просто считается пустым,
-а причина пишется в лог.
+Ошибки базы не роняют страницу: кэш просто считается пустым, а причина
+пишется в лог.
 """
 
-import json
 import logging
-import sqlite3
-import threading
+import random
 import time
-from contextlib import closing
-from pathlib import Path
 
 log = logging.getLogger(__name__)
 
 
 class DiskCache:
-    def __init__(self, path):
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-        self.path = str(path)
-        # Запись идёт под замком: dev-сервер Flask обслуживает запросы
-        # в нескольких потоках, и два одновременных INSERT могли бы
-        # получить "database is locked"
-        self._lock = threading.Lock()
-        with self.connect() as con:
-            # WAL-режим: чтение не ждёт, пока другой поток закончит запись
-            con.execute("PRAGMA journal_mode=WAL")
-            con.execute(
-                "CREATE TABLE IF NOT EXISTS cache ("
-                " key TEXT PRIMARY KEY,"
-                " value TEXT NOT NULL,"
-                " expires_at REAL NOT NULL)"
-            )
-
-    def connect(self):
-        # Новое соединение на каждую операцию: sqlite3-соединение нельзя
-        # делить между потоками, а открыть файл заново почти ничего не стоит
-        con = sqlite3.connect(self.path, timeout=10)
-        return _AutoClose(con)
+    def __init__(self, client=None):
+        self.client = client
 
     def get(self, key):
         """Значение по ключу или None, если его нет или срок жизни истёк."""
+        if not self.client:
+            return None
         try:
-            with self.connect() as con:
-                row = con.execute(
-                    "SELECT value, expires_at FROM cache WHERE key = ?", (key,)
-                ).fetchone()
-        except sqlite3.Error:
+            rows = (
+                self.client.table("cache")
+                .select("value, expires_at")
+                .eq("key", key)
+                .limit(1)
+                .execute()
+                .data
+            )
+        except Exception:  # noqa: BLE001
             log.error("Кэш: не удалось прочитать %s", key, exc_info=True)
             return None
-        if row is None:
+        if not rows:
             return None
-        value, expires_at = row
+        value, expires_at = rows[0]["value"], rows[0]["expires_at"]
         # expires_at хранится как абсолютное время (секунды с 1970 года).
-        # Просроченную запись удаляем сразу, чтобы база не пухла
+        # Просроченную запись удаляем сразу, чтобы таблица не пухла
         if expires_at < time.time():
             self.delete(key)
             return None
-        return json.loads(value)
+        return value
 
     def set(self, key, value, ttl):
         """Сохраняет value (любой JSON-совместимый объект) на ttl секунд."""
+        if not self.client:
+            return
         try:
-            with self._lock, self.connect() as con:
-                con.execute(
-                    "INSERT OR REPLACE INTO cache (key, value, expires_at)"
-                    " VALUES (?, ?, ?)",
-                    (key, json.dumps(value, ensure_ascii=False), time.time() + ttl),
-                )
-        except sqlite3.Error:
+            self.client.table("cache").upsert(
+                {"key": key, "value": value, "expires_at": time.time() + ttl},
+                on_conflict="key",
+            ).execute()
+        except Exception:  # noqa: BLE001
             log.error("Кэш: не удалось записать %s", key, exc_info=True)
 
     def delete(self, key):
+        if not self.client:
+            return
         try:
-            with self._lock, self.connect() as con:
-                con.execute("DELETE FROM cache WHERE key = ?", (key,))
-        except sqlite3.Error:
+            self.client.table("cache").delete().eq("key", key).execute()
+        except Exception:  # noqa: BLE001
             log.error("Кэш: не удалось удалить %s", key, exc_info=True)
 
     def random_key(self, *prefixes):
@@ -88,45 +71,23 @@ class DiskCache:
         На этом держится кнопка "Мне повезёт": артист выбирается из того,
         что уже лежит в кэше, без единого запроса в интернет.
         """
-        if not prefixes:
+        if not self.client or not prefixes:
             return None
-        where = " OR ".join("key LIKE ? ESCAPE '\\'" for _ in prefixes)
-        # В LIKE символы % и _ означают "любые символы", а в наших ключах
-        # встречается "_". Экранируем их, чтобы префикс искался буквально
-        like = [
-            p.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
-            for p in prefixes
-        ]
-        try:
-            with self.connect() as con:
-                row = con.execute(
-                    f"SELECT key FROM cache WHERE ({where}) AND expires_at > ? "
-                    "ORDER BY RANDOM() LIMIT 1",
-                    (*like, time.time()),
-                ).fetchone()
-        except sqlite3.Error:
-            log.error("Кэш: не удалось выбрать случайный ключ", exc_info=True)
-            return None
-        return row[0] if row else None
-
-
-class _AutoClose:
-    """sqlite3-соединение для with: при выходе commit (или rollback) и close.
-
-    Стандартный "with sqlite3.connect()" делает только commit, но не закрывает
-    соединение, из-за чего файл базы остаётся открытым.
-    """
-
-    def __init__(self, con):
-        self.con = con
-
-    def __enter__(self):
-        return self.con
-
-    def __exit__(self, exc_type, *_):
-        with closing(self.con):
-            if exc_type is None:
-                self.con.commit()
-            else:
-                self.con.rollback()
-        return False
+        now = time.time()
+        keys = []
+        # PostgREST в LIKE использует "*" как "любые символы"
+        for prefix in prefixes:
+            try:
+                rows = (
+                    self.client.table("cache")
+                    .select("key")
+                    .like("key", prefix + "*")
+                    .gt("expires_at", now)
+                    .execute()
+                    .data
+                )
+            except Exception:  # noqa: BLE001
+                log.error("Кэш: не удалось выбрать случайный ключ", exc_info=True)
+                continue
+            keys.extend(row["key"] for row in rows)
+        return random.choice(keys) if keys else None

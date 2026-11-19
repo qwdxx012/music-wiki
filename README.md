@@ -6,7 +6,7 @@
 
 ```bash
 pip install -r requirements.txt
-cp .env.example .env        #заполнить LASTFM_API_KEY, AUDD_API_TOKEN, MB_CONTACT
+cp .env.example .env        # заполнить ключи (см. ниже)
 python download_assets.py   # один раз: xp.css + иконки Silk в static/
 flask --app app run --debug
 ```
@@ -17,19 +17,30 @@ flask --app app run --debug
 - Цитаты в подсказке маскота: `services/quotes.py` (список `MUSIC_QUOTES`).
 - Запись с микрофона работает только на https:// или http://localhost.
 
-
-
 ## База данных
 
-Проект использует две SQLite-базы в `instance/` (создаются автоматически при старте):
+Проект использует облачную базу **Supabase** (PostgreSQL + REST API PostgREST).
 
-- `cache.sqlite3` — технический key-value кэш ответов MusicBrainz / Last.fm / AudD (`services/cache.py`);
-- `wiki.sqlite3` — реляционная предметная база: `artists`, `albums`, `tracks`, `genres`,
-  `artist_genres`, `track_genres`, `facts`, `recognitions`, `search_queries`
-  (схема — `db/schema.sql`, доступ к данным — `services/store.py`).
+В `.env` задаются две переменные из Supabase Dashboard -> Project Settings -> API:
 
-Данные попадают в `wiki.sqlite3` автоматически: при открытии страницы артиста или трека,
-при поиске и при распознавании аудио. Демонстрационные данные: `python scripts/seed_demo.py`.
+- `SUPABASE_URL` - адрес проекта;
+- `SUPABASE_KEY` - ключ `service_role` (только для сервера, в браузер не попадает).
+
+Схема создаётся один раз в **SQL Editor** Supabase файлом
+[`db/supabase_schema.sql`](db/supabase_schema.sql). Таблицы:
+
+- `artists`, `albums`, `tracks` - карточки MusicBrainz;
+- `genres`, `artist_genres`, `track_genres` - жанры и связи M:N;
+- `facts`, `release_dates` - факты «Этот день»;
+- `recognitions`, `search_queries` - аналитика распознаваний и поиска;
+- `cache` - технический key-value кэш ответов MusicBrainz / Last.fm / AudD.
+
+Представления `top_searches` и `artists_album_counts` считают агрегаты на
+стороне базы. Доступ к таблицам закрыт политиками RLS: приложение ходит под
+`service_role`, а публичный ключ `anon` данные не видит.
+
+Данные попадают в базу автоматически: при открытии страницы артиста или
+трека, при поиске и при распознавании аудио.
 
 ![ER-диаграмма](docs/ER_diagram.png)
 
@@ -38,7 +49,7 @@ flask --app app run --debug
 - `SITE_URL` в `.env` задает публичный адрес для canonical, `robots.txt` и `sitemap.xml`.
   По умолчанию стоит `https://example.com`, при публикации его нужно заменить.
 - `/robots.txt` и `/sitemap.xml` отдает Flask. В sitemap попадают статические
-  страницы и карточки артистов и треков из базы.
+  страницы и карточки артистов и треков из Supabase.
 - Статика кэшируется, у изображений заданы размеры, GIF маскота облегчен.
 - Итоги и скриншоты Lighthouse лежат в `docs/seo/`.
 
@@ -55,4 +66,9 @@ docker run -p 5000:5000 --env-file .env music-wiki
 docker pull ghcr.io/qwdxx012/music-wiki:latest
 ```
 
-Workflow: `.github/workflows/build.yml` (задачи `test` → `build`).
+Workflow: `.github/workflows/build.yml` (задачи `test`, `docker`, `build`).
+
+Локальный деплой с nginx, HTTPS и доменом `music-wiki.localhost` вынесен в
+отдельный репозиторий
+[music-wiki-deploy](https://github.com/qwdxx012/music-wiki-deploy): там лежат
+`docker-compose.yml`, конфигурация nginx и отчет по практическому занятию.
